@@ -1,4 +1,3 @@
-
 const url = "https://api.tvmaze.com/shows";
 
 const state = {
@@ -8,11 +7,14 @@ const state = {
 };
 
 const filmCardContainer = document.getElementById("filmCard-container");
+
+
 const searchBox = document.getElementById("search-input");
 const dropDownSelector = document.getElementById("movie");
 const epiDropDownSelector = document.getElementById("episode");
 const counter = document.getElementById("counter");
 
+ 
 // Fetch all shows from API
 async function getMovies() {
   try {
@@ -48,6 +50,39 @@ function clearErrorMessage() {
 function populateShowSelector(allMovies) {
   dropDownSelector.innerHTML = `<option value="">Select a Show</option>`;
   allMovies.forEach((show) => {
+
+const state = { allEpisodes: [], searchTerm: "" };
+
+function setup() {
+  document.getElementById("filmCardContainer").innerHTML = "<p>Loading episodes...</p>";
+
+  fetch("https://api.tvmaze.com/shows/82/episodes")
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`Network error: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then((data) => {
+      state.allEpisodes = data;
+      makePageForEpisodes(data);
+      selector(data);
+      userSelection();
+    })
+    .catch((err) => {
+      showError(err.message);
+    });
+}
+
+function showError(message) {
+  const container = document.getElementById("filmCardContainer");
+  container.innerHTML = `<p style="color: red; font-weight: bold;">Error: ${message}</p>`;
+}
+
+function selector(allEpisodes) {
+  dropDownSelector.innerHTML = `<option value="">All Episodes</option>`;
+  for (let episode of allEpisodes) {
+
     const option = document.createElement("option");
     option.value = show.id;
     option.textContent = show.name;
@@ -75,6 +110,7 @@ async function episodeSelector(showId) {
   }
 }
 
+ 
 // Populate episode dropdown
 function updateEpisodeDropdown(episodes) {
   epiDropDownSelector.innerHTML = `<option value="">All Episodes</option>`;
@@ -115,6 +151,19 @@ function createFilmCard(item, isEpisode = false) {
   filmCard.appendChild(linkElement);
 
   return filmCard;
+
+function render() {
+  const searched = state.allEpisodes.filter((ep) =>
+    ep.name.toLowerCase().includes(state.searchTerm.toLowerCase())
+  );
+  counter.textContent = `Results: ${searched.length}/${state.allEpisodes.length}`;
+  makePageForEpisodes(searched);
+}
+
+function searchRes(event) {
+  state.searchTerm = event.target.value;
+  render();
+ 
 }
 
 // Render movie list
@@ -130,6 +179,7 @@ function displayMovies(movies) {
   });
 }
 
+ 
 // Render episode list
 function displayEpisodes(episodes) {
   counter.textContent = `Results: ${episodes.length}`;
@@ -154,6 +204,22 @@ async function userSelection() {
       epiDropDownSelector.style.display = "none";
       return;
     }
+
+function userSelection() {
+  dropDownSelector.addEventListener("change", () => {
+    const selectedValue = dropDownSelector.value.toLowerCase();
+    const filtered = state.allEpisodes.filter((ep) =>
+      ep.name.toLowerCase().includes(selectedValue)
+    );
+    makePageForEpisodes(selectedValue === "" ? state.allEpisodes : filtered);
+    counter.textContent = `Results: ${selectedValue === "" ? state.allEpisodes.length : filtered.length}/${state.allEpisodes.length}`;
+  });
+}
+
+function makePageForEpisodes(episodeList) {
+  const rootElem = document.getElementById("filmCardContainer");
+  rootElem.textContent = "";
+
 
     await episodeSelector(selectedShowId);
 

@@ -9,23 +9,31 @@
   </head>
 
   <body>
+ 
     <div id="header-wrapper">
       <input type="text" id="search-input" placeholder="Search shows or episodes..." />
       <select id="movie"></select>
       <select id="episode"></select>
       <div id="counter"></div>
       <div id="error-message" style="display:none; color:red;"></div>
+
+    <div id="search-bar" class="search-bar">
+      <label>
+        Search <input type="search" id="search-input" name="search-input" placeholder="Search for a show" /> 🔍
+      </label>
+      <p id="counter"></p>
+      <label id="select-movie">
+        Select episode:
+        <select name="Movie" id="movie"></select>
+      </label>
+ 
     </div>
     <div id="filmCard-container"></div>
 
 
-    <div id="filmCardContainer">  <!--Changed "root" to "filmCardContainer"-->>
-    </div>
+    <div id="filmCardContainer"></div>
 
-    <!-- Loads a provided function called getAllEpisodes() which returns all episodes -->
-    <script src="episodes.js"></script>
-
-    <!-- Loads YOUR javascript code -->
     <script src="script.js"></script>
   </body>
 </html>
+
