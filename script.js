@@ -1,105 +1,162 @@
+const url = "https://api.tvmaze.com/shows";
+
+const state = {
+  allShows: [],
+  allEpisodes: [],
+  searchTerm: "",
+  cachedEpisodes: {},
+  currentView: "shows", 
+};
+
+const showContainer = document.getElementById("filmCard-container");
 const searchBox = document.getElementById("search-input");
-const dropDownSelector = document.getElementById("movie");
+const showSelector = document.getElementById("movie");
+const episodeSelector = document.getElementById("episode");
 const counter = document.getElementById("counter");
+const errorMessageDiv = document.getElementById("error-message");
 
-const state = { allEpisodes: [], searchTerm: "" };
 
-function setup() {
-  document.getElementById("filmCardContainer").innerHTML = "<p>Loading episodes...</p>";
-
-  fetch("https://api.tvmaze.com/shows/82/episodes")
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error(`Network error: ${response.status}`);
-      }
-      return response.json();
-    })
-    .then((data) => {
-      state.allEpisodes = data;
-      makePageForEpisodes(data);
-      selector(data);
-      userSelection();
-    })
-    .catch((err) => {
-      showError(err.message);
-    });
-}
-
-function showError(message) {
-  const container = document.getElementById("filmCardContainer");
-  container.innerHTML = `<p style="color: red; font-weight: bold;">Error: ${message}</p>`;
-}
-
-function selector(allEpisodes) {
-  dropDownSelector.innerHTML = `<option value="">All Episodes</option>`;
-  for (let episode of allEpisodes) {
-    const option = document.createElement("option");
-    option.value = episode.name;
-    option.textContent = episode.name || `${episode.id} - No name!`;
-    dropDownSelector.appendChild(option);
+async function fetchShows() {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Failed to fetch shows");
+    const data = await res.json();
+    return data.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+  } catch (err) {
+    showError(err.message);
+    return [];
   }
 }
 
-function render() {
-  const searched = state.allEpisodes.filter((ep) =>
-    ep.name.toLowerCase().includes(state.searchTerm.toLowerCase())
-  );
-  counter.textContent = `Results: ${searched.length}/${state.allEpisodes.length}`;
-  makePageForEpisodes(searched);
+
+async function fetchEpisodes(showId) {
+  if (state.cachedEpisodes[showId]) return state.cachedEpisodes[showId];
+  try {
+    const res = await fetch(`https://api.tvmaze.com/shows/${showId}/episodes`);
+    if (!res.ok) throw new Error("Failed to fetch episodes");
+    const episodes = await res.json();
+    state.cachedEpisodes[showId] = episodes;
+    return episodes;
+  } catch (err) {
+    showError(err.message);
+    return [];
+  }
 }
 
-function searchRes(event) {
-  state.searchTerm = event.target.value;
-  render();
+
+function showError(msg) {
+  errorMessageDiv.textContent = msg;
+  errorMessageDiv.style.display = "block";
 }
 
-searchBox.addEventListener("input", searchRes);
+function clearError() {
+  errorMessageDiv.textContent = "";
+  errorMessageDiv.style.display = "none";
+}
 
-function userSelection() {
-  dropDownSelector.addEventListener("change", () => {
-    const selectedValue = dropDownSelector.value.toLowerCase();
-    const filtered = state.allEpisodes.filter((ep) =>
-      ep.name.toLowerCase().includes(selectedValue)
-    );
-    makePageForEpisodes(selectedValue === "" ? state.allEpisodes : filtered);
-    counter.textContent = `Results: ${selectedValue === "" ? state.allEpisodes.length : filtered.length}/${state.allEpisodes.length}`;
+
+function renderShows(shows) {
+  showContainer.innerHTML = "";
+  counter.textContent = `Results: ${shows.length}`;
+  shows.forEach((show) => {
+    const card = document.createElement("div");
+    card.classList.add("film-card");
+    card.innerHTML = `
+      <img src="${show.image?.medium || "https://via.placeholder.com/210x295"}" alt="${show.name}">
+      <h3>${show.name}</h3>
+      <p>${show.summary || "No summary"}</p>
+      <p><strong>Genres:</strong> ${show.genres.join(", ")}</p>
+      <p><strong>Status:</strong> ${show.status}</p>
+      <p><strong>Rating:</strong> ${show.rating?.average || "N/A"}</p>
+      <p><strong>Runtime:</strong> ${show.runtime} min</p>
+    `;
+    card.addEventListener("click", () => loadEpisodes(show.id));
+    showContainer.appendChild(card);
+  });
+  showSelector.style.display = "none";
+  episodeSelector.style.display = "none";
+  state.currentView = "shows";
+}
+
+
+function renderEpisodes(episodes) {
+  showContainer.innerHTML = "";
+  counter.textContent = `Results: ${episodes.length}`;
+  episodes.forEach((ep) => {
+    const card = document.createElement("div");
+    card.classList.add("film-card");
+    card.innerHTML = `
+      <img src="${ep.image?.medium || "https://via.placeholder.com/210x295"}" alt="${ep.name}">
+      <h3>${ep.name} (S${String(ep.season).padStart(2, "0")}E${String(ep.number).padStart(2, "0")})</h3>
+      <p>${ep.summary || "No summary"}</p>
+      <a href="${ep.url}" target="_blank" class="redirect">More Info</a>
+    `;
+    showContainer.appendChild(card);
+  });
+  showSelector.style.display = "none";
+  episodeSelector.style.display = "inline-block";
+  state.currentView = "episodes";
+}
+
+
+async function loadEpisodes(showId) {
+  const episodes = await fetchEpisodes(showId);
+  state.allEpisodes = episodes;
+  updateEpisodeSelector(episodes);
+  renderEpisodes(episodes);
+  addBackLink();
+}
+
+
+function updateEpisodeSelector(episodes) {
+  episodeSelector.innerHTML = `<option value="">All Episodes</option>`;
+  episodes.forEach((ep) => {
+    const opt = document.createElement("option");
+    opt.value = ep.id;
+    opt.textContent = `${ep.name} (S${String(ep.season).padStart(2, "0")}E${String(ep.number).padStart(2, "0")})`;
+    episodeSelector.appendChild(opt);
   });
 }
 
-function makePageForEpisodes(episodeList) {
-  const rootElem = document.getElementById("filmCardContainer");
-  rootElem.textContent = "";
 
-  const totalCount = document.createElement("h2");
-  totalCount.textContent = `Got ${episodeList.length} episode(s)`;
-  totalCount.style.textAlign = "center";
-  totalCount.style.marginBottom = "2rem";
-  rootElem.appendChild(totalCount);
-
-  for (const episode of episodeList) {
-    const card = document.createElement("div");
-    card.className = "card";
-
-    const title = document.createElement("div");
-    title.className = "card-title";
-    title.textContent = `${episode.name} - S${episode.season
-      .toString()
-      .padStart(2, "0")}E${episode.number.toString().padStart(2, "0")}`;
-
-    const image = document.createElement("img");
-    image.src = episode.image.medium;
-    image.alt = episode.name;
-
-    const summary = document.createElement("div");
-    summary.className = "card-description";
-    summary.innerHTML = episode.summary;
-
-    card.appendChild(title);
-    card.appendChild(image);
-    card.appendChild(summary);
-
-    rootElem.appendChild(card);
-  }
+function addBackLink() {
+  const link = document.createElement("button");
+  link.textContent = "Back to Shows";
+  link.onclick = () => {
+    renderShows(state.allShows);
+    searchBox.value = "";
+  };
+  showContainer.prepend(link);
 }
 
-window.onload = setup;
+
+searchBox.addEventListener("input", (e) => {
+  const term = e.target.value.toLowerCase();
+  if (state.currentView === "shows") {
+    const filtered = state.allShows.filter((s) =>
+      s.name.toLowerCase().includes(term) ||
+      s.summary.toLowerCase().includes(term) ||
+      s.genres.join(" ").toLowerCase().includes(term)
+    );
+    renderShows(filtered);
+  } else {
+    const filtered = state.allEpisodes.filter((ep) =>
+      ep.name.toLowerCase().includes(term)
+    );
+    renderEpisodes(filtered);
+  }
+});
+
+
+episodeSelector.addEventListener("change", (e) => {
+  const id = e.target.value;
+  if (!id) return renderEpisodes(state.allEpisodes);
+  const ep = state.allEpisodes.find((e) => e.id.toString() === id);
+  if (ep) renderEpisodes([ep]);
+});
+
+window.onload = async () => {
+  state.allShows = await fetchShows();
+  renderShows(state.allShows);
+};
+
