@@ -9,6 +9,14 @@
   </head>
 
   <body>
+ 
+    <div id="header-wrapper">
+      <input type="text" id="search-input" placeholder="Search shows or episodes..." />
+      <select id="movie"></select>
+      <select id="episode"></select>
+      <div id="counter"></div>
+      <div id="error-message" style="display:none; color:red;"></div>
+
     <div id="search-bar" class="search-bar">
       <label>
         Search <input type="search" id="search-input" name="search-input" placeholder="Search for a show" /> 🔍
@@ -18,7 +26,10 @@
         Select episode:
         <select name="Movie" id="movie"></select>
       </label>
+ 
     </div>
+    <div id="filmCard-container"></div>
+
 
     <div id="filmCardContainer"></div>
 
