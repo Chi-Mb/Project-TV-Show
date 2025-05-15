@@ -2,27 +2,31 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TV Show Project | Chi Mbah (Chi-Mb)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TV Show Project |Chi Mbah (Chi-Mb)</title>
     <link href="style.css" rel="stylesheet" />
     <link rel="icon" href="/favicon.ico" type="image/x-icon" />
   </head>
 
   <body>
-    <div id="search-bar" class="search-bar">
-      <label>
-        Search <input type="search" id="search-input" name="search-input" placeholder="Search for a show" /> 🔍
-      </label>
-      <p id="counter"></p>
-      <label id="select-movie">
-        Select episode:
-        <select name="Movie" id="movie"></select>
-      </label>
+    <div id="header-wrapper">
+      <input type="text" id="search-input" placeholder="Search shows or episodes..." />
+      <button id="back-to-shows" style="display:none;">← Back to Shows</button>
+      <select id="episode" style="display:none;"></select>
+      <div id="counter"></div>
+      <div id="error-message" style="display:none; color:red;"></div>
     </div>
 
-    <div id="filmCardContainer"></div>
+    <main>
+      
+      <div id="shows-list"></div>
+
+      
+      <div id="episodes-list" style="display:none;"></div>
+    </main>
 
     <script src="script.js"></script>
   </body>
 </html>
+
 
