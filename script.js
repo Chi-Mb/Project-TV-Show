@@ -1,21 +1,35 @@
-function setup() {
-  const allEpisodes = getAllEpisodes(); // Assume this returns the episode list
-  state.allEpisodes = allEpisodes;
-  makePageForEpisodes(allEpisodes);
-  selector(allEpisodes);         // Populate dropdown
-  userSelection();               // Set up dropdown event listener
-}
-
-//////////////////////////////////////////////////////
-
 const searchBox = document.getElementById("search-input");
 const dropDownSelector = document.getElementById("movie");
 const counter = document.getElementById("counter");
 
-// State object for shared data
 const state = { allEpisodes: [], searchTerm: "" };
 
-// Populate dropdown options
+function setup() {
+  document.getElementById("filmCardContainer").innerHTML = "<p>Loading episodes...</p>";
+
+  fetch("https://api.tvmaze.com/shows/82/episodes")
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`Network error: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then((data) => {
+      state.allEpisodes = data;
+      makePageForEpisodes(data);
+      selector(data);
+      userSelection();
+    })
+    .catch((err) => {
+      showError(err.message);
+    });
+}
+
+function showError(message) {
+  const container = document.getElementById("filmCardContainer");
+  container.innerHTML = `<p style="color: red; font-weight: bold;">Error: ${message}</p>`;
+}
+
 function selector(allEpisodes) {
   dropDownSelector.innerHTML = `<option value="">All Episodes</option>`;
   for (let episode of allEpisodes) {
@@ -26,7 +40,6 @@ function selector(allEpisodes) {
   }
 }
 
-// Re-render episode cards based on search
 function render() {
   const searched = state.allEpisodes.filter((ep) =>
     ep.name.toLowerCase().includes(state.searchTerm.toLowerCase())
@@ -35,7 +48,6 @@ function render() {
   makePageForEpisodes(searched);
 }
 
-// Update searchTerm on input and re-render
 function searchRes(event) {
   state.searchTerm = event.target.value;
   render();
@@ -43,7 +55,6 @@ function searchRes(event) {
 
 searchBox.addEventListener("input", searchRes);
 
-// Filter episodes based on dropdown selection
 function userSelection() {
   dropDownSelector.addEventListener("change", () => {
     const selectedValue = dropDownSelector.value.toLowerCase();
@@ -54,8 +65,6 @@ function userSelection() {
     counter.textContent = `Results: ${selectedValue === "" ? state.allEpisodes.length : filtered.length}/${state.allEpisodes.length}`;
   });
 }
-
-////////////////////////////////////////////////////////
 
 function makePageForEpisodes(episodeList) {
   const rootElem = document.getElementById("filmCardContainer");
