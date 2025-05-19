@@ -183,20 +183,20 @@ function addBackLink() {
 searchBox.addEventListener("input", (e) => {
   const term = e.target.value.toLowerCase();
   if (state.currentView === "shows") {
-    const filtered = state.allShows.filter(
-      (s) =>
-        s.name.toLowerCase().includes(term) ||
-        s.summary?.toLowerCase().includes(term) ||
-        s.genres.join(" ").toLowerCase().includes(term)
+    const filtered = state.allShows.filter((s) =>
+      s.name.toLowerCase().includes(term) ||
+      s.summary.toLowerCase().includes(term) ||
+      s.genres.join(" ").toLowerCase().includes(term)
     );
     renderShows(filtered);
-  }   } else {
+  } else {
     const filtered = state.allEpisodes.filter((ep) =>
-      ep.name.toLowerCase().includes(term) ||
-      (ep.summary && ep.summary.toLowerCase().includes(term))
+      ep.name.toLowerCase().includes(term)
     );
     renderEpisodes(filtered);
   }
+});
+
 
 });
 
