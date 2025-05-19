@@ -190,12 +190,14 @@ searchBox.addEventListener("input", (e) => {
         s.genres.join(" ").toLowerCase().includes(term)
     );
     renderShows(filtered);
-  } else {
+  }   } else {
     const filtered = state.allEpisodes.filter((ep) =>
-      ep.name.toLowerCase().includes(term)
+      ep.name.toLowerCase().includes(term) ||
+      (ep.summary && ep.summary.toLowerCase().includes(term))
     );
     renderEpisodes(filtered);
   }
+
 });
 
 episodeSelector.addEventListener("change", (e) => {
