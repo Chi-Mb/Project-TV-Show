@@ -80,6 +80,7 @@ function renderShows(shows) {
     card.appendChild(h3);
 
     const pSummary = document.createElement("p");
+    // summary can contain HTML tags, so we keep innerHTML but be mindful of risks
     pSummary.innerHTML = show.summary || "No summary";
     card.appendChild(pSummary);
 
@@ -183,10 +184,11 @@ function addBackLink() {
 searchBox.addEventListener("input", (e) => {
   const term = e.target.value.toLowerCase();
   if (state.currentView === "shows") {
-    const filtered = state.allShows.filter((s) =>
-      s.name.toLowerCase().includes(term) ||
-      s.summary.toLowerCase().includes(term) ||
-      s.genres.join(" ").toLowerCase().includes(term)
+    const filtered = state.allShows.filter(
+      (s) =>
+        s.name.toLowerCase().includes(term) ||
+        s.summary?.toLowerCase().includes(term) ||
+        s.genres.join(" ").toLowerCase().includes(term)
     );
     renderShows(filtered);
   } else {
@@ -195,9 +197,6 @@ searchBox.addEventListener("input", (e) => {
     );
     renderEpisodes(filtered);
   }
-});
-
-
 });
 
 episodeSelector.addEventListener("change", (e) => {
@@ -211,5 +210,6 @@ window.onload = async () => {
   state.allShows = await fetchShows();
   renderShows(state.allShows);
 };
+
 
 
